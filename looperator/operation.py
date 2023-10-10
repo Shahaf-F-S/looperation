@@ -1,38 +1,18 @@
 # operation.py
 
-import datetime as dt
 from typing import Optional, Tuple, Generic, Any, Dict, TypeVar
 
 from attrs import define, field
 
 from represent import represent
 
+from looperator.process import ProcessTime
+
 __all__ = [
-    "ProcessTime",
     "Inputs",
     "Outputs",
     "Operation"
 ]
-
-@represent
-@define(repr=False, frozen=True)
-class ProcessTime:
-    """A class to contain the info of a call to the results."""
-
-    start: dt.datetime
-    end: dt.datetime
-
-    @property
-    def time(self) -> dt.timedelta:
-        """
-        Returns the time duration of the call.
-
-        :return: The call time.
-        """
-
-        return self.end - self.start
-    # end time
-# end ProcessTime
 
 @represent
 @define(repr=False, frozen=True)

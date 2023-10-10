@@ -28,12 +28,14 @@ def main() -> None:
 
     operator.pause()
 
+    print()
     print("passed 5 seconds")
     print("paused for 5 more seconds")
 
     time.sleep(5)
 
     print("5 seconds left")
+    print()
 
     operator.unpause()
 

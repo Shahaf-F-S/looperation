@@ -11,6 +11,8 @@ from typing import (
 
 from represent import represent
 
+from looperator.process import ProcessTime
+
 __all__ = [
     "Operator"
 ]
@@ -75,6 +77,8 @@ class Operator(Generic[_O]):
         self._operation_process: Optional[threading.Thread] = None
         self._timeout_process: Optional[threading.Thread] = None
 
+        self._start: Optional[dt.datetime] = None
+
         self.operation = operation
         self.args_collector = args_collector
         self.kwargs_collector = kwargs_collector
@@ -129,11 +133,37 @@ class Operator(Generic[_O]):
         """
         returns the value of the process being blocked.
 
-        :return: The value.
+        :return: The flag value.
         """
 
         return self._timeout
     # end timeout
+
+    @property
+    def start(self) -> Optional[dt.datetime]:
+        """
+        returns the value of the start time.
+
+        :return: The start time value.
+        """
+
+        return self._start
+    # end start
+
+    @property
+    def time(self) -> Optional[ProcessTime]:
+        """
+        returns the value of the start time.
+
+        :return: The start time value.
+        """
+
+        if self._start is None:
+            return None
+        # end if
+
+        return ProcessTime(start=self._start, end=dt.datetime.now())
+    # end time
 
     def operate(self) -> None:
         """Runs the process of the price screening."""

@@ -7,7 +7,8 @@ from typing import (
 )
 
 from looperator.operator import Operator
-from looperator.operation import Operation, Inputs, Outputs, ProcessTime
+from looperator.operation import Operation, Inputs, Outputs
+from looperator.process import ProcessTime
 
 __all__ = [
     "RecordOperator",
