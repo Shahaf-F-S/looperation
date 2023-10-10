@@ -1,0 +1,7 @@
+pdoc3
+twine
+pytest
+
+attrs
+
+pyrepresent
