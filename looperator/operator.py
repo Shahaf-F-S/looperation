@@ -78,6 +78,7 @@ class Operator(Generic[_O]):
         self._timeout_process: Optional[threading.Thread] = None
 
         self._start: Optional[dt.datetime] = None
+        self._end: Optional[dt.datetime] = None
 
         self.operation = operation
         self.args_collector = args_collector
@@ -151,6 +152,21 @@ class Operator(Generic[_O]):
     # end start
 
     @property
+    def end(self) -> Optional[dt.datetime]:
+        """
+        returns the value of the end time.
+
+        :return: The end time value.
+        """
+
+        if self.running and (not self.paused):
+            self._end = dt.datetime.now()
+        # end if
+
+        return self._end
+    # end end
+
+    @property
     def time(self) -> Optional[ProcessTime]:
         """
         returns the value of the start time.
@@ -162,7 +178,10 @@ class Operator(Generic[_O]):
             return None
         # end if
 
-        return ProcessTime(start=self._start, end=dt.datetime.now())
+        return ProcessTime(
+            start=self._start,
+            end=self.end or dt.datetime.now()
+        )
     # end time
 
     def operate(self) -> None:
@@ -322,6 +341,8 @@ class Operator(Generic[_O]):
         self._paused = False
 
         self._blocking = block
+
+        self._start = dt.datetime.now()
 
         if timeout:
             self.start_timeout(timeout)
