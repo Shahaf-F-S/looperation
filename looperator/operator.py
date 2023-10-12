@@ -99,6 +99,21 @@ class Operator(Generic[_O]):
         self.handler = handler
     # end __init__
 
+    def __getstate__(self) -> Dict[str, Any]:
+        """
+        Gets the state of the object.
+
+        :return: The state of the object.
+        """
+
+        data = self.__dict__.copy()
+
+        data["_operation_process"] = None
+        data["_timeout_process"] = None
+
+        return data
+    # end __getstate__
+
     @property
     def blocking(self) -> bool:
         """
