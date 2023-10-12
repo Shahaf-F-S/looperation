@@ -12,6 +12,7 @@ from typing import (
 from represent import represent
 
 from looperator.process import ProcessTime
+from looperator.handler import Handler
 
 __all__ = [
     "Operator"
@@ -51,6 +52,7 @@ class Operator(Generic[_O]):
             operation: Callable[..., _O],
             args_collector: Optional[Callable[[], Iterable[Any]]] = None,
             kwargs_collector: Optional[Callable[[], Dict[str, Any]]] = None,
+            handler: Optional[Handler] = None,
             delay: Optional[Union[float, dt.timedelta]] = None
     ) -> None:
         """
@@ -83,6 +85,7 @@ class Operator(Generic[_O]):
         self.operation = operation
         self.args_collector = args_collector
         self.kwargs_collector = kwargs_collector
+        self.handler = handler
     # end __init__
 
     @property
@@ -200,7 +203,14 @@ class Operator(Generic[_O]):
             while self.operating:
                 t = time.time()
 
-                self.operate()
+                if self.handler is None:
+                    self.operate()
+
+                else:
+                    with self.handler:
+                        self.operate()
+                    # end with
+                # end try
 
                 if self.delay:
                     delay = time_seconds(self.delay)
