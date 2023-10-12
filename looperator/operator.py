@@ -53,7 +53,10 @@ class Operator(Generic[_O]):
             args_collector: Optional[Callable[[], Iterable[Any]]] = None,
             kwargs_collector: Optional[Callable[[], Dict[str, Any]]] = None,
             handler: Optional[Handler] = None,
-            delay: Optional[Union[float, dt.timedelta]] = None
+            delay: Optional[Union[float, dt.timedelta]] = None,
+            block: Optional[bool] = False,
+            wait: Optional[Union[float, dt.timedelta, dt.datetime]] = None,
+            timeout: Optional[Union[float, dt.timedelta, dt.datetime]] = None
     ) -> None:
         """
         Defines the attributes of the handler.
@@ -61,7 +64,11 @@ class Operator(Generic[_O]):
         :param operation: The callback to call.
         :param kwargs_collector: The callback to collect args.
         :param kwargs_collector: The callback to collect kwargs.
+        :param handler: The handler object to handle the operation.
         :param delay: The delay for the process.
+        :param wait: The value to wait after starting to run the process.
+        :param block: The value to block the execution.
+        :param timeout: The valur to add a start_timeout to the process.
         """
 
         if delay is None:
@@ -69,6 +76,10 @@ class Operator(Generic[_O]):
         # end if
 
         self.delay = delay
+
+        self.timeout_value = timeout
+        self.wait_value = wait
+        self.block_value = block
 
         self._operating = False
         self._blocking = False
@@ -277,7 +288,7 @@ class Operator(Generic[_O]):
         """Starts the screening process."""
 
         if self.operating:
-            warnings.warn(f"Handling process of {repr(self)} is already running.")
+            warnings.warn(f"Operation process of {repr(self)} is already running.")
 
             return
         # end if
@@ -296,8 +307,7 @@ class Operator(Generic[_O]):
         # end if
     # end start_operation
 
-    @staticmethod
-    def start_waiting(wait: Union[float, dt.timedelta, dt.datetime]) -> None:
+    def start_waiting(self, wait: Optional[Union[float, dt.timedelta, dt.datetime]] = None) -> None:
         """
         Runs a waiting for the process.
 
@@ -306,10 +316,18 @@ class Operator(Generic[_O]):
         :return: The start_timeout process.
         """
 
+        if wait is None:
+            wait = self.wait_value
+
+            if wait is None:
+                raise ValueError("Waiting value is not defined.")
+            # end if
+        # end if
+
         time.sleep(time_seconds(wait))
     # end start_waiting
 
-    def start_timeout(self, duration: Union[float, dt.timedelta, dt.datetime]) -> None:
+    def start_timeout(self, duration: Optional[Union[float, dt.timedelta, dt.datetime]] = None) -> None:
         """
         Runs a timeout for the process.
 
@@ -317,6 +335,14 @@ class Operator(Generic[_O]):
 
         :return: The start_timeout process.
         """
+
+        if duration is None:
+            duration = self.timeout_value
+
+            if duration is None:
+                raise ValueError("Timeout value is not defined.")
+            # end if
+        # end if
 
         if self.timeout:
             warnings.warn(f"Timeout process of {repr(self)} is already running.")
@@ -335,7 +361,7 @@ class Operator(Generic[_O]):
 
     def run(
             self,
-            block: Optional[bool] = False,
+            block: Optional[bool] = None,
             wait: Optional[Union[float, dt.timedelta, dt.datetime]] = None,
             timeout: Optional[Union[float, dt.timedelta, dt.datetime]] = None
     ) -> None:
@@ -346,6 +372,18 @@ class Operator(Generic[_O]):
         :param block: The value to block the execution.
         :param timeout: The valur to add a start_timeout to the process.
         """
+
+        if block is None:
+            block = self.block_value
+        # end if
+
+        if wait is None:
+            wait = self.wait_value
+        # end if
+
+        if timeout is None:
+            timeout = self.timeout_value
+        # end if
 
         self._running = True
         self._paused = False
@@ -411,6 +449,7 @@ class Operator(Generic[_O]):
         """Stops the screening process."""
 
         self._running = False
+        self._blocking = False
 
         self.unpause()
         self.stop_operation()
