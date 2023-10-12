@@ -5,10 +5,13 @@ from typing import (
     Optional, Any, Callable, Type, Iterable
 )
 
+from represent import represent
+
 __all__ = [
     "Handler"
 ]
 
+@represent
 class Handler:
     """A class to handle operations."""
 
