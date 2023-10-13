@@ -142,7 +142,7 @@ class BaseQueue(Generic[_V]):
 
         self.values: List[_V] = []
 
-        self.insert_all(values or ())
+        self.extend(values or ())
     # end __init__
 
     def __len__(self) -> int:
@@ -155,6 +155,16 @@ class BaseQueue(Generic[_V]):
         return len(self.values)
     # end __len__
 
+    def __bool__(self) -> bool:
+        """
+        Checks if there are values in the queue.
+
+        :return: The existence of values in the queue.
+        """
+
+        return bool(self.values)
+    # end __bool__
+
     def insert(self, value: _V) -> None:
         """
         Pushes the value into the queue.
@@ -165,7 +175,7 @@ class BaseQueue(Generic[_V]):
         self.values.append(value)
     # end push
 
-    def insert_all(self, values: Iterable[_V]) -> None:
+    def extend(self, values: Iterable[_V]) -> None:
         """
         Pushes the values into the queue.
 
