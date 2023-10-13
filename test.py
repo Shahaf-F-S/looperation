@@ -21,7 +21,10 @@ def main() -> None:
     operator.run(timeout=dt.timedelta(seconds=10))
 
     while operator.operating and (len(queue) < 5):
-        print("less than 5 seconds", f"queue length: {len(queue)}", queue.values[-1].outputs)
+        print(
+            "less than 5 seconds", f"queue length: {len(queue)}",
+            "last value:", queue.values[-1].outputs.returns
+        )
 
         time.sleep(1)
     # end while
@@ -40,7 +43,10 @@ def main() -> None:
     operator.unpause()
 
     while operator.operating:
-        print("more than 5 seconds", f"queue length: {len(queue)}", queue.values[-1].outputs)
+        print(
+            "more than 5 seconds", f"queue length: {len(queue)}",
+            "last value:", queue.values[-1].outputs.returns
+        )
 
         time.sleep(1)
     # end while

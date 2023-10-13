@@ -84,6 +84,8 @@ class Superator(Operator):
                 operator.start_timeout(duration)
             # end if
         # end if
+
+        super().timeout_loop(duration)
     # end start_timeouts
 
     def run(
@@ -130,7 +132,7 @@ class Superator(Operator):
     # end stop_timeout
 
     def pause(self) -> None:
-        """Stops the screening process."""
+        """Pauses the screening process."""
 
         for operator in self.operators:
             operator.pause()
@@ -140,7 +142,7 @@ class Superator(Operator):
     # end pause
 
     def unpause(self) -> None:
-        """Stops the screening process."""
+        """Unpauses the screening process."""
 
         for operator in self.operators:
             operator.unpause()

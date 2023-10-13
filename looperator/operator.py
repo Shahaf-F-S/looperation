@@ -230,6 +230,10 @@ class Operator(Generic[_O]):
 
         while self.running:
             while self.operating:
+                if self.paused:
+                    break
+                # end if
+
                 t = time.time()
 
                 if self.handler is None:
@@ -263,6 +267,12 @@ class Operator(Generic[_O]):
         :return: The start_timeout process.
         """
 
+        origin = False
+
+        if isinstance(duration, dt.datetime):
+            origin = True
+        # end if
+
         if isinstance(duration, (int, float)):
             duration = dt.timedelta(seconds=duration)
         # end if
@@ -291,7 +301,9 @@ class Operator(Generic[_O]):
             last = dt.datetime.now()
 
             if paused:
-                duration += (last - start)
+                if not origin:
+                    duration += (last - start)
+                # end if
 
                 paused = False
             # end if
