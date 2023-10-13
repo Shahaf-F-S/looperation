@@ -342,6 +342,7 @@ class Operator(Generic[_O]):
         # end if
 
         self._operating = True
+        self._running = True
 
         if self.blocking:
             self.operation_loop()
@@ -464,6 +465,10 @@ class Operator(Generic[_O]):
 
         if self.operating:
             self._operating = False
+        # end if
+
+        if self.running:
+            self._running = False
         # end if
 
         if (
