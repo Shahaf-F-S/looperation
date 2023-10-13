@@ -49,9 +49,10 @@ class Operator(Generic[_O]):
 
     def __init__(
             self,
-            operation: Callable[..., _O],
+            operation: Optional[Callable[..., _O]] = None,
             args_collector: Optional[Callable[[], Iterable[Any]]] = None,
             kwargs_collector: Optional[Callable[[], Dict[str, Any]]] = None,
+            termination: Optional[Callable[[], Any]] = None,
             handler: Optional[Handler] = None,
             delay: Optional[Union[float, dt.timedelta]] = None,
             block: Optional[bool] = False,
@@ -64,6 +65,7 @@ class Operator(Generic[_O]):
         :param operation: The callback to call.
         :param kwargs_collector: The callback to collect args.
         :param kwargs_collector: The callback to collect kwargs.
+        :param termination: The termination callback.
         :param handler: The handler object to handle the operation.
         :param delay: The delay for the process.
         :param wait: The value to wait after starting to run the process.
@@ -94,6 +96,7 @@ class Operator(Generic[_O]):
         self._end: Optional[dt.datetime] = None
 
         self.operation = operation
+        self.termination = termination
         self.args_collector = args_collector
         self.kwargs_collector = kwargs_collector
         self.handler = handler
@@ -415,7 +418,9 @@ class Operator(Generic[_O]):
             self.start_waiting(wait)
         # end if
 
-        self.start_operation()
+        if self.operation is not None:
+            self.start_operation()
+        # end if
     # end run
 
     def stop_operation(self) -> None:
@@ -469,5 +474,9 @@ class Operator(Generic[_O]):
         self.unpause()
         self.stop_operation()
         self.stop_timeout()
+
+        if self.termination is not None:
+            self.termination()
+        # end if
     # end stop
 # end Operator
