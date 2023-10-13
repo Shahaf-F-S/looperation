@@ -1,3 +1,5 @@
 attrs
+pandas
+numpy
 
 pyrepresent

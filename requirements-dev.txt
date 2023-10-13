@@ -3,5 +3,7 @@ twine
 pytest
 
 attrs
+pandas
+numpy
 
 pyrepresent
