@@ -54,6 +54,7 @@ class Operator(Generic[_O]):
             kwargs_collector: Optional[Callable[[], Dict[str, Any]]] = None,
             termination: Optional[Callable[[], Any]] = None,
             handler: Optional[Handler] = None,
+            loop: Optional[bool] = True,
             delay: Optional[Union[float, dt.timedelta]] = None,
             block: Optional[bool] = False,
             wait: Optional[Union[float, dt.timedelta, dt.datetime]] = None,
@@ -67,6 +68,7 @@ class Operator(Generic[_O]):
         :param kwargs_collector: The callback to collect kwargs.
         :param termination: The termination callback.
         :param handler: The handler object to handle the operation.
+        :param loop: The value to run a loop.
         :param delay: The delay for the process.
         :param wait: The value to wait after starting to run the process.
         :param block: The value to block the execution.
@@ -78,6 +80,7 @@ class Operator(Generic[_O]):
         # end if
 
         self.delay = delay
+        self._loop = loop
 
         self.timeout_value = timeout
         self.wait_value = wait
@@ -127,6 +130,17 @@ class Operator(Generic[_O]):
 
         return self._blocking
     # end blocking
+
+    @property
+    def loop(self) -> bool:
+        """
+        returns the value of the process being looped.
+
+        :return: The value.
+        """
+
+        return self._loop
+    # end loop
 
     @property
     def operating(self) -> bool:
@@ -227,6 +241,10 @@ class Operator(Generic[_O]):
 
     def operation_loop(self) -> None:
         """Runs the process of the price screening."""
+
+        if not self.loop:
+            self.operate()
+        # end if
 
         while self.running:
             while self.operating:
@@ -391,6 +409,7 @@ class Operator(Generic[_O]):
 
     def run(
             self,
+            loop: Optional[bool] = True,
             block: Optional[bool] = None,
             wait: Optional[Union[float, dt.timedelta, dt.datetime]] = None,
             timeout: Optional[Union[float, dt.timedelta, dt.datetime]] = None
@@ -398,6 +417,7 @@ class Operator(Generic[_O]):
         """
         Runs the process of the price screening.
 
+        :param loop: The value to run a loop.
         :param wait: The value to wait after starting to run the process.
         :param block: The value to block the execution.
         :param timeout: The valur to add a start_timeout to the process.
@@ -413,6 +433,10 @@ class Operator(Generic[_O]):
 
         if timeout is None:
             timeout = self.timeout_value
+        # end if
+
+        if loop is not None:
+            self._loop = loop
         # end if
 
         self._running = True
