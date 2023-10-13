@@ -13,6 +13,7 @@ from looperator.process import ProcessTime
 __all__ = [
     "RecordOperator",
     "QueueOperator",
+    "ListOperator",
     "OperationQueue",
     "BaseQueue",
     "QueueProtocol"
@@ -21,6 +22,59 @@ __all__ = [
 _O = TypeVar("_O")
 
 class RecordOperator(Operator[_O]):
+    """A class to handle arbitrage option values."""
+
+    def __init__(
+            self,
+            operation: Callable[..., _O],
+            args_collector: Optional[Callable[[], Iterable[Any]]] = None,
+            kwargs_collector: Optional[Callable[[], Dict[str, Any]]] = None,
+            delay: Optional[Union[float, dt.timedelta]] = None
+    ) -> None:
+        """
+        Defines the attributes of the handler.
+
+        :param operation: The callback to call.
+        :param kwargs_collector: The callback to collect args.
+        :param kwargs_collector: The callback to collect kwargs.
+        :param delay: The delay for the process.
+        """
+
+        super().__init__(
+            operation=operation,
+            args_collector=args_collector,
+            kwargs_collector=kwargs_collector,
+            delay=delay
+        )
+    # end __init__
+
+    def produce(self) -> Operation[_O]:
+        """Runs the process of the price screening."""
+
+        start = dt.datetime.now()
+
+        args = self.args_collector() if self.args_collector else ()
+        kwargs = self.kwargs_collector() if self.kwargs_collector else {}
+
+        returns = self.operation(*args, **kwargs)
+
+        end = dt.datetime.now()
+
+        return Operation[_O](
+            time=ProcessTime(start=start, end=end),
+            inputs=Inputs(args=args, kwargs=kwargs),
+            outputs=Outputs[_O](returns=returns)
+        )
+    # end produce
+
+    def operate(self) -> None:
+        """Runs the process of the price screening."""
+
+        self.produce()
+    # end handle
+# end RecordOperator
+
+class ListOperator(RecordOperator[_O]):
     """A class to handle arbitrage option values."""
 
     def __init__(
@@ -55,31 +109,12 @@ class RecordOperator(Operator[_O]):
         self.record = record
     # end __init__
 
-    def produce(self) -> Operation[_O]:
-        """Runs the process of the price screening."""
-
-        start = dt.datetime.now()
-
-        args = self.args_collector() if self.args_collector else ()
-        kwargs = self.kwargs_collector() if self.kwargs_collector else {}
-
-        returns = self.operation(*args, **kwargs)
-
-        end = dt.datetime.now()
-
-        return Operation[_O](
-            time=ProcessTime(start=start, end=end),
-            inputs=Inputs(args=args, kwargs=kwargs),
-            outputs=Outputs[_O](returns=returns)
-        )
-    # end produce
-
     def operate(self) -> None:
         """Runs the process of the price screening."""
 
         self.record.append(self.produce())
     # end handle
-# end RecordOperator
+# end ListOperator
 
 class QueueProtocol(Protocol):
     """A class to represent an event queue protocol."""
