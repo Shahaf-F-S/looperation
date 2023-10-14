@@ -6,3 +6,4 @@ from looperator.operation import *
 from looperator.record import *
 from looperator.process import *
 from looperator.handler import *
+from looperator.service import *
