@@ -85,7 +85,7 @@ class Handler:
 
         caught = False
 
-        if isinstance(exception, self.exceptions or Exception):
+        if isinstance(exception, tuple(self.exceptions) or Exception):
             caught = self.catch and True
 
             if self.exception_callback is not None:
