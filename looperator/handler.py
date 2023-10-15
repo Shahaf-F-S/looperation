@@ -25,7 +25,7 @@ class Handler:
     def __init__(
             self,
             success_callback: Optional[Callable[[], Any]] = None,
-            exception_callback: Optional[Callable[[], None]] = None,
+            exception_callback: Optional[Callable[[], Any]] = None,
             cleanup_callback: Optional[Callable[[], Any]] = None,
             exception_handler: Optional[Callable[[Exception], Any]] = None,
             exceptions: Optional[Iterable[Type[Exception]]] = None,
