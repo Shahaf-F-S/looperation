@@ -90,6 +90,7 @@ class Superator(Operator):
 
     def run(
             self,
+            loop: Optional[bool] = True,
             block: Optional[bool] = None,
             wait: Optional[Union[float, dt.timedelta, dt.datetime]] = None,
             timeout: Optional[Union[float, dt.timedelta, dt.datetime]] = None
@@ -97,18 +98,19 @@ class Superator(Operator):
         """
         Runs the process of the price screening.
 
+        :param loop: The value to run a loop.
         :param wait: The value to wait after starting to run the process.
         :param block: The value to block the execution.
         :param timeout: The valur to add a start_timeout to the process.
         """
-
-        super().run(block=block, wait=wait, timeout=timeout)
 
         for operator in self.operators:
             if not any((operator.running, operator.operating)):
                 operator.run()
             # end if
         # end if
+
+        super().run(block=block, wait=wait, timeout=timeout, loop=loop)
     # end start_timeout
 
     def stop_operation(self) -> None:
