@@ -1,7 +1,7 @@
 # process.py
 
 import datetime as dt
-from typing import Dict, ClassVar, Any, Optional
+from typing import ClassVar, Any, Self
 
 from attrs import define
 
@@ -15,7 +15,7 @@ __all__ = [
     "to_datetime"
 ]
 
-def to_datetime(index: Any, adjust: Optional[bool] = True) -> dt.datetime:
+def to_datetime(index: Any, adjust: bool = True) -> dt.datetime:
     """
     Converts the index into a datetime object.
 
@@ -62,13 +62,6 @@ class ProcessTime:
     START: ClassVar[str] = "start"
     END: ClassVar[str] = "end"
 
-    try:
-        from typing import Self
-
-    except ImportError:
-        Self = Any
-    # end try
-
     @property
     def time(self) -> dt.timedelta:
         """
@@ -81,7 +74,7 @@ class ProcessTime:
     # end time
 
     @classmethod
-    def load(cls, data: Dict[str, float]) -> Self:
+    def load(cls, data: dict[str, float]) -> Self:
         """
         Creates an instance of the class for the data.
 
@@ -96,7 +89,7 @@ class ProcessTime:
         )
     # end load
 
-    def json(self) -> Dict[str, float]:
+    def json(self) -> dict[str, float]:
         """
         Returns a json object to represent the data of the object.
 

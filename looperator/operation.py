@@ -1,9 +1,6 @@
 # operation.py
 
-from typing import (
-    Optional, Tuple, Generic, Any,
-    Dict, TypeVar, ClassVar, Union
-)
+from typing import Generic, Any, TypeVar, ClassVar, Self
 
 from attrs import define, field
 
@@ -17,25 +14,18 @@ __all__ = [
     "Operation"
 ]
 
-InputsData = Dict[str, Union[Tuple, Dict[str, Any]]]
+InputsData = dict[str, tuple | dict[str, Any]]
 
 @represent
 @define(repr=False, frozen=True)
 class Inputs:
     """A class to represent an arbitrage event."""
 
-    args: Optional[Tuple] = field(factory=tuple)
-    kwargs: Optional[Dict[str, Any]] = field(factory=dict)
+    args: tuple = field(factory=tuple)
+    kwargs: dict[str, Any] = field(factory=dict)
 
     ARGS: ClassVar[str] = "args"
     KWARGS: ClassVar[str] = "kwargs"
-
-    try:
-        from typing import Self
-
-    except ImportError:
-        Self = Any
-    # end try
 
     @classmethod
     def load(cls, data: InputsData) -> Self:
@@ -69,23 +59,16 @@ class Inputs:
 
 _O = TypeVar("_O")
 
-OutputsData = Dict[str, _O]
+OutputsData = dict[str, _O]
 
 @represent
 @define(repr=False, frozen=True)
 class Outputs(Generic[_O]):
     """A class to represent an arbitrage event."""
 
-    returns: Optional[_O] = None
+    returns: _O = None
 
     RETURNS: ClassVar[str] = "returns"
-
-    try:
-        from typing import Self
-
-    except ImportError:
-        Self = Any
-    # end try
 
     @classmethod
     def load(cls, data: OutputsData) -> Self:
@@ -111,8 +94,8 @@ class Outputs(Generic[_O]):
     # end json
 # end Outputs
 
-TimeData = Dict[str, float]
-OperationData = Dict[str, Union[InputsData, OutputsData, TimeData]]
+TimeData = dict[str, float]
+OperationData = dict[str, InputsData | OutputsData | TimeData]
 
 @represent
 @define(repr=False, frozen=True)
@@ -126,13 +109,6 @@ class Operation(Generic[_O]):
     TIME: ClassVar[str] = "time"
     INPUTS: ClassVar[str] = "inputs"
     OUTPUTS: ClassVar[str] = "outputs"
-
-    try:
-        from typing import Self
-
-    except ImportError:
-        Self = Any
-    # end try
 
     @classmethod
     def load(cls, data: OperationData) -> Self:

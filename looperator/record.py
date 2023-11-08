@@ -2,8 +2,7 @@
 
 import datetime as dt
 from typing import (
-    Union, Optional, Callable, Generic,
-    Any, Dict, List, Protocol, Iterable, TypeVar
+    Callable, Generic, Any, Protocol, Iterable, TypeVar
 )
 
 from looperator.operator import Operator
@@ -27,9 +26,9 @@ class RecordOperator(Operator[_O]):
     def __init__(
             self,
             operation: Callable[..., _O],
-            args_collector: Optional[Callable[[], Iterable[Any]]] = None,
-            kwargs_collector: Optional[Callable[[], Dict[str, Any]]] = None,
-            delay: Optional[Union[float, dt.timedelta]] = None
+            args_collector: Callable[[], Iterable[Any]] = None,
+            kwargs_collector: Callable[[], dict[str, Any]] = None,
+            delay: float | dt.timedelta = None
     ) -> None:
         """
         Defines the attributes of the handler.
@@ -80,10 +79,10 @@ class ListOperator(RecordOperator[_O]):
     def __init__(
             self,
             operation: Callable[..., _O],
-            args_collector: Optional[Callable[[], Iterable[Any]]] = None,
-            kwargs_collector: Optional[Callable[[], Dict[str, Any]]] = None,
-            record: Optional[List[Operation[_O]]] = None,
-            delay: Optional[Union[float, dt.timedelta]] = None
+            args_collector: Callable[[], Iterable[Any]] = None,
+            kwargs_collector: Callable[[], dict[str, Any]] = None,
+            delay: float | dt.timedelta = None,
+            record: list[Operation[_O]] = None
     ) -> None:
         """
         Defines the attributes of the handler.
@@ -133,14 +132,14 @@ _V = TypeVar("_V")
 class BaseQueue(Generic[_V]):
     """A class to represent an event queue protocol."""
 
-    def __init__(self, values: Optional[Iterable[_V]] = None) -> None:
+    def __init__(self, values: Iterable[_V] = None) -> None:
         """
         Defines the attributes of the queue.
 
         :param values: The values to insert.
         """
 
-        self.values: List[_V] = []
+        self.values: list[_V] = []
 
         self.extend(values or ())
     # end __init__
@@ -200,7 +199,7 @@ class BaseQueue(Generic[_V]):
         # end try
     # end remove
 
-    def remove_all(self) -> List[_V]:
+    def remove_all(self) -> list[_V]:
         """
         Removes all values first value from the queue.
 
@@ -256,10 +255,10 @@ class QueueOperator(RecordOperator[_O]):
     def __init__(
             self,
             operation: Callable[..., _O],
-            args_collector: Optional[Callable[[], Iterable[Any]]] = None,
-            kwargs_collector: Optional[Callable[[], Dict[str, Any]]] = None,
-            queue: Optional[QueueProtocol] = None,
-            delay: Optional[Union[float, dt.timedelta]] = None
+            args_collector: Callable[[], Iterable[Any]] = None,
+            kwargs_collector: Callable[[], dict[str, Any]] = None,
+            delay: float | dt.timedelta = None,
+            queue: QueueProtocol = None
     ) -> None:
         """
         Defines the attributes of the handler.

@@ -5,8 +5,7 @@ import warnings
 import threading
 import datetime as dt
 from typing import (
-    Union, Optional, Callable, Generic,
-    Any, Dict, Iterable, TypeVar
+    Callable, Generic, Any, Iterable, TypeVar
 )
 
 from represent import represent
@@ -18,7 +17,7 @@ __all__ = [
     "Operator"
 ]
 
-def time_seconds(wait: Union[float, dt.timedelta, dt.datetime]) -> float:
+def time_seconds(wait: float | dt.timedelta | dt.datetime) -> float:
     """
     Runs a waiting for the process.
 
@@ -49,16 +48,16 @@ class Operator(Generic[_O]):
 
     def __init__(
             self,
-            operation: Optional[Callable[..., _O]] = None,
-            args_collector: Optional[Callable[[], Iterable[Any]]] = None,
-            kwargs_collector: Optional[Callable[[], Dict[str, Any]]] = None,
-            termination: Optional[Callable[[], Any]] = None,
-            handler: Optional[Handler] = None,
-            loop: Optional[bool] = True,
-            delay: Optional[Union[float, dt.timedelta]] = None,
-            block: Optional[bool] = False,
-            wait: Optional[Union[float, dt.timedelta, dt.datetime]] = None,
-            timeout: Optional[Union[float, dt.timedelta, dt.datetime]] = None
+            operation: Callable[..., _O] = None,
+            args_collector: Callable[[], Iterable[Any]] = None,
+            kwargs_collector: Callable[[], dict[str, Any]] = None,
+            termination: Callable[[], Any] = None,
+            handler: Handler = None,
+            loop: bool = True,
+            delay: float | dt.timedelta = None,
+            block: bool = False,
+            wait: float | dt.timedelta | dt.datetime = None,
+            timeout: float | dt.timedelta | dt.datetime = None
     ) -> None:
         """
         Defines the attributes of the handler.
@@ -92,11 +91,11 @@ class Operator(Generic[_O]):
         self._running = False
         self._paused = False
 
-        self._operation_process: Optional[threading.Thread] = None
-        self._timeout_process: Optional[threading.Thread] = None
+        self._operation_process: threading.Thread | None = None
+        self._timeout_process: threading.Thread | None = None
 
-        self._start: Optional[dt.datetime] = None
-        self._end: Optional[dt.datetime] = None
+        self._start: dt.datetime | None = None
+        self._end: dt.datetime | None = None
 
         self.operation = operation
         self.termination = termination
@@ -105,7 +104,7 @@ class Operator(Generic[_O]):
         self.handler = handler
     # end __init__
 
-    def __getstate__(self) -> Dict[str, Any]:
+    def __getstate__(self) -> dict[str, Any]:
         """
         Gets the state of the object.
 
@@ -187,7 +186,7 @@ class Operator(Generic[_O]):
     # end timeout
 
     @property
-    def start(self) -> Optional[dt.datetime]:
+    def start(self) -> dt.datetime | None:
         """
         returns the value of the start time.
 
@@ -198,7 +197,7 @@ class Operator(Generic[_O]):
     # end start
 
     @property
-    def end(self) -> Optional[dt.datetime]:
+    def end(self) -> dt.datetime | None:
         """
         returns the value of the end time.
 
@@ -213,7 +212,7 @@ class Operator(Generic[_O]):
     # end end
 
     @property
-    def time(self) -> Optional[ProcessTime]:
+    def time(self) -> ProcessTime | None:
         """
         returns the value of the start time.
 
@@ -276,7 +275,7 @@ class Operator(Generic[_O]):
         # end while
     # end operation_loop
 
-    def timeout_loop(self, duration: Union[float, dt.timedelta, dt.datetime]) -> None:
+    def timeout_loop(self, duration: float | dt.timedelta | dt.datetime) -> None:
         """
         Runs a timeout for the process.
 
@@ -356,7 +355,7 @@ class Operator(Generic[_O]):
         # end if
     # end start_operation
 
-    def start_waiting(self, wait: Optional[Union[float, dt.timedelta, dt.datetime]] = None) -> None:
+    def start_waiting(self, wait: float | dt.timedelta | dt.datetime = None) -> None:
         """
         Runs a waiting for the process.
 
@@ -376,7 +375,7 @@ class Operator(Generic[_O]):
         time.sleep(time_seconds(wait))
     # end start_waiting
 
-    def start_timeout(self, duration: Optional[Union[float, dt.timedelta, dt.datetime]] = None) -> None:
+    def start_timeout(self, duration: float | dt.timedelta | dt.datetime = None) -> None:
         """
         Runs a timeout for the process.
 
@@ -410,10 +409,10 @@ class Operator(Generic[_O]):
 
     def run(
             self,
-            loop: Optional[bool] = True,
-            block: Optional[bool] = None,
-            wait: Optional[Union[float, dt.timedelta, dt.datetime]] = None,
-            timeout: Optional[Union[float, dt.timedelta, dt.datetime]] = None
+            loop: bool = True,
+            block: bool = None,
+            wait: float | dt.timedelta | dt.datetime = None,
+            timeout: float | dt.timedelta | dt.datetime = None
     ) -> None:
         """
         Runs the process of the price screening.

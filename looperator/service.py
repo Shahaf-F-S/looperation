@@ -2,7 +2,6 @@
 
 import time
 import datetime as dt
-from typing import Optional, Union
 
 from looperator.operator import Operator
 
@@ -10,7 +9,7 @@ __all__ = [
     "ServiceInterface"
 ]
 
-Time = Union[float, int, dt.timedelta, dt.datetime]
+Time = float | int | dt.timedelta, dt.datetime
 
 class ServiceInterface:
     """A service interface for server client communication."""
@@ -23,7 +22,7 @@ class ServiceInterface:
 
         self._paused = False
 
-        self.refresh_value: Optional[Union[float, dt.timedelta]] = None
+        self.refresh_value: float | dt.timedelta | None = None
 
         self._refresh_operator = Operator(
             operation=self._refresh,
@@ -148,7 +147,7 @@ class ServiceInterface:
         # end if
     # end _refresh
 
-    def start_refreshing(self, refresh: Union[float, dt.timedelta]) -> None:
+    def start_refreshing(self, refresh: float | dt.timedelta) -> None:
         """
         Starts the refreshing process.
 
@@ -166,7 +165,7 @@ class ServiceInterface:
         self._update_operator.start_operation()
     # end start_updating
 
-    def start_timeout(self, duration: Optional[Time] = None) -> None:
+    def start_timeout(self, duration: Time = None) -> None:
         """
         Runs a start_timeout for the process.
 
@@ -178,7 +177,7 @@ class ServiceInterface:
         self._timeout_operator.start_timeout(duration)
     # end start_timeout
 
-    def start_waiting(self, wait: Optional[Time] = None) -> None:
+    def start_waiting(self, wait: Time = None) -> None:
         """
         Runs a waiting for the process.
 
@@ -192,11 +191,11 @@ class ServiceInterface:
 
     def run(
             self,
-            update: Optional[bool] = False,
-            block: Optional[bool] = False,
-            refresh: Optional[Union[float, dt.timedelta]] = None,
-            wait: Optional[Union[float, dt.timedelta, dt.datetime]] = None,
-            timeout: Optional[Union[float, dt.timedelta, dt.datetime]] = None,
+            update: bool = False,
+            block: bool = False,
+            refresh: float | dt.timedelta = None,
+            wait: Time = None,
+            timeout: Time = None,
     ) -> None:
         """
         Runs the api service.

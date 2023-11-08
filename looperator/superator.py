@@ -1,7 +1,7 @@
 # superator.py
 
 import datetime as dt
-from typing import Union, Optional, Iterable
+from typing import Iterable
 
 from looperator.operator import Operator
 from looperator.handler import Handler
@@ -10,17 +10,19 @@ __all__ = [
     "Superator"
 ]
 
+Time = float | dt.timedelta | dt.datetime
+
 class Superator(Operator):
     """A super operator to control multiple operators."""
 
     def __init__(
             self,
             operators: Iterable[Operator],
-            handler: Optional[Handler] = None,
-            delay: Optional[Union[float, dt.timedelta]] = None,
-            block: Optional[bool] = False,
-            wait: Optional[Union[float, dt.timedelta, dt.datetime]] = None,
-            timeout: Optional[Union[float, dt.timedelta, dt.datetime]] = None
+            handler: Handler = None,
+            delay: float | dt.timedelta = None,
+            block: bool = False,
+            wait: Time = None,
+            timeout: Time = None
     ) -> None:
         """
         Defines the attributes of the operators controller.
@@ -62,7 +64,7 @@ class Superator(Operator):
         # end if
     # end start_operations
 
-    def start_timeouts(self, duration: Optional[Union[float, dt.timedelta, dt.datetime]] = None) -> None:
+    def start_timeouts(self, duration: Time = None) -> None:
         """
         Runs a timeout for the process.
 
@@ -90,10 +92,10 @@ class Superator(Operator):
 
     def run(
             self,
-            loop: Optional[bool] = True,
-            block: Optional[bool] = None,
-            wait: Optional[Union[float, dt.timedelta, dt.datetime]] = None,
-            timeout: Optional[Union[float, dt.timedelta, dt.datetime]] = None
+            loop: bool = True,
+            block: bool = None,
+            wait: Time = None,
+            timeout: Time = None
     ) -> None:
         """
         Runs the process of the price screening.

@@ -1,9 +1,7 @@
 # handler.py
 
 import warnings
-from typing import (
-    Optional, Any, Callable, Type, Iterable
-)
+from typing import Any, Callable, Iterable, Self
 
 from represent import represent
 
@@ -15,23 +13,16 @@ __all__ = [
 class Handler:
     """A class to handle operations."""
 
-    try:
-        from typing import Self
-
-    except ImportError:
-        Self = Any
-    # end try
-
     def __init__(
             self,
-            success_callback: Optional[Callable[[], Any]] = None,
-            exception_callback: Optional[Callable[[], Any]] = None,
-            cleanup_callback: Optional[Callable[[], Any]] = None,
-            exception_handler: Optional[Callable[[Exception], Any]] = None,
-            exceptions: Optional[Iterable[Type[Exception]]] = None,
-            warn: Optional[bool] = True,
-            catch: Optional[bool] = True,
-            silence: Optional[bool] = False
+            success_callback: Callable[[], Any] = None,
+            exception_callback: Callable[[], Any] = None,
+            cleanup_callback: Callable[[], Any] = None,
+            exception_handler: Callable[[Exception], Any] = None,
+            exceptions: Iterable[type[Exception]] = None,
+            warn: bool = True,
+            catch: bool = True,
+            silence: bool = False
     ) -> None:
         """
         Handles the communication between the server and client.
@@ -74,7 +65,7 @@ class Handler:
         return self
     # end __enter__
 
-    def __exit__(self, base: Type[Exception], exception: Exception, traceback) -> bool:
+    def __exit__(self, base: type[Exception], exception: Exception, traceback) -> bool:
         """
         Exits the generator with exception.
 
