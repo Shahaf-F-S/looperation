@@ -16,7 +16,6 @@ def main() -> None:
 
     setup(
         package="looperator",
-        project="pyproject.toml",
         exclude=[
             "__pycache__",
             "*.pyc"
@@ -25,7 +24,7 @@ def main() -> None:
         requirements="requirements.txt",
         dev_requirements="requirements-dev.txt",
         name='looperator',
-        version='1.7.1',
+        version='1.7.2',
         description=(
             "A python module to easily run loop based operations, "
             "control the starting, stopping of the loop, "
