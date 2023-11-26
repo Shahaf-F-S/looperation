@@ -51,9 +51,11 @@ class Operator(Generic[_O]):
             operation: Callable[..., _O] = None,
             args_collector: Callable[[], Iterable[Any]] = None,
             kwargs_collector: Callable[[], dict[str, Any]] = None,
+            stopping_collector: Callable[[], bool] = None,
             termination: Callable[[], Any] = None,
             handler: Handler = None,
             loop: bool = True,
+            loop_stopping: bool = None,
             delay: float | dt.timedelta = None,
             block: bool = False,
             wait: float | dt.timedelta | dt.datetime = None,
@@ -65,9 +67,11 @@ class Operator(Generic[_O]):
         :param operation: The callback to call.
         :param kwargs_collector: The callback to collect args.
         :param kwargs_collector: The callback to collect kwargs.
+        :param stopping_collector: The callback to collect a value to indicate to stop.
         :param termination: The termination callback.
         :param handler: The handler object to handle the operation.
         :param loop: The value to run a loop.
+        :param loop_stopping: The value to evaluate stopping during a loop.
         :param delay: The delay for the process.
         :param wait: The value to wait after starting to run the process.
         :param block: The value to block the execution.
@@ -78,7 +82,15 @@ class Operator(Generic[_O]):
             delay = self.DELAY
         # end if
 
+        if loop_stopping is None and loop:
+            loop_stopping = True
+
+        elif not loop:
+            loop_stopping = False
+        # end if
+
         self.delay = delay
+        self.loop_stopping = loop_stopping
         self._loop = loop
 
         self.timeout_value = timeout
@@ -90,9 +102,11 @@ class Operator(Generic[_O]):
         self._timeout = False
         self._running = False
         self._paused = False
+        self._stopping = False
 
         self._operation_process: threading.Thread | None = None
         self._timeout_process: threading.Thread | None = None
+        self._stopping_process: threading.Thread | None = None
 
         self._start: dt.datetime | None = None
         self._end: dt.datetime | None = None
@@ -101,6 +115,7 @@ class Operator(Generic[_O]):
         self.termination = termination
         self.args_collector = args_collector
         self.kwargs_collector = kwargs_collector
+        self.stopping_collector = stopping_collector
         self.handler = handler
     # end __init__
 
@@ -177,13 +192,24 @@ class Operator(Generic[_O]):
     @property
     def timeout(self) -> bool:
         """
-        returns the value of the process being blocked.
+        returns the value of the process awaiting timeout.
 
         :return: The flag value.
         """
 
         return self._timeout
     # end timeout
+
+    @property
+    def stopping(self) -> bool:
+        """
+        returns the value of the process awaiting stopping.
+
+        :return: The flag value.
+        """
+
+        return self._stopping
+    # end stopping
 
     @property
     def start(self) -> dt.datetime | None:
@@ -238,6 +264,46 @@ class Operator(Generic[_O]):
         )
     # end operate
 
+    def continue_loop(self) -> bool:
+        """Returns the value to continue the loop."""
+
+        return (
+            (not self.stopping_collector) or
+            (not self.loop_stopping) or
+            (not self.stopping_collector())
+        )
+    # end continue_loop
+
+    def stopping_loop(self) -> None:
+        """Runs the process of the price screening."""
+
+        while self.running:
+            while not self.loop_stopping and self.stopping_collector:
+                if self.paused:
+                    break
+                # end if
+
+                t = time.time()
+
+                if self.stopping_collector and self.stopping_collector():
+                    self.stop()
+
+                    return
+                # end if
+
+                if self.delay:
+                    delay = time_seconds(self.delay)
+
+                    time.sleep(max(delay - (time.time() - t), 0))
+                # end if
+            # end while
+
+            while self.paused:
+                time.sleep(self._SLEEP)
+            # end while
+        # end while
+    # end stopping_loop
+
     def operation_loop(self) -> None:
         """Runs the process of the price screening."""
 
@@ -245,8 +311,8 @@ class Operator(Generic[_O]):
             self.operate()
         # end if
 
-        while self.running:
-            while self.operating:
+        while self.running and self.continue_loop():
+            while self.operating and self.continue_loop():
                 if self.paused:
                     break
                 # end if
@@ -407,9 +473,32 @@ class Operator(Generic[_O]):
         self._timeout_process.start()
     # end start_timeout
 
+    def start_stopping(self) -> None:
+        """
+        Runs a timeout for the process.
+
+        :return: The start_timeout process.
+        """
+
+        if self.timeout:
+            warnings.warn(f"Stopping process of {repr(self)} is already running.")
+
+            return
+        # end if
+
+        self._timeout = True
+
+        self._stopping_process = threading.Thread(
+            target=lambda: self.stopping_loop()
+        )
+
+        self._stopping_process.start()
+    # end start_stopping
+
     def run(
             self,
             loop: bool = True,
+            loop_stopping: bool = None,
             block: bool = None,
             wait: float | dt.timedelta | dt.datetime = None,
             timeout: float | dt.timedelta | dt.datetime = None
@@ -420,6 +509,7 @@ class Operator(Generic[_O]):
         :param loop: The value to run a loop.
         :param wait: The value to wait after starting to run the process.
         :param block: The value to block the execution.
+        :param loop_stopping: The value to evaluate stopping during a loop.
         :param timeout: The valur to add a start_timeout to the process.
         """
 
@@ -439,6 +529,15 @@ class Operator(Generic[_O]):
             self._loop = loop
         # end if
 
+        if loop_stopping is None and loop:
+            loop_stopping = True
+
+        elif not loop:
+            loop_stopping = False
+        # end if
+
+        self.loop_stopping = loop_stopping
+
         self._running = True
         self._paused = False
 
@@ -452,6 +551,10 @@ class Operator(Generic[_O]):
 
         if wait:
             self.start_waiting(wait)
+        # end if
+
+        if not loop_stopping and self.stopping_collector is not None:
+            self.start_stopping()
         # end if
 
         if self.operation is not None:
