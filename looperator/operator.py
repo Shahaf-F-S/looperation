@@ -8,7 +8,7 @@ from typing import (
     Callable, Generic, Any, Iterable, TypeVar
 )
 
-from represent import represent
+from represent import represent, Modifiers
 
 from looperator.process import ProcessTime
 from looperator.handler import Handler
@@ -42,6 +42,19 @@ _O = TypeVar("_O")
 @represent
 class Operator(Generic[_O]):
     """A class to handle a loop operation."""
+
+    __modifiers__ = Modifiers(
+        excluded=[
+            "operation", "args_collector", "kwargs_collector",
+            "stopping_collector", "termination", "timeout_value"
+        ],
+        properties=[
+            "blocking", "timeout", "wait", "loop",
+            "operation", "running", "paused", "time",
+            "stopping", "start", "end"
+        ]
+
+    )
 
     DELAY = 0
     _SLEEP = 0.0001
