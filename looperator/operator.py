@@ -61,6 +61,7 @@ class Operator(Generic[_O]):
 
     def __init__(
             self,
+            name: str = None, *,
             operation: Callable[..., _O] = None,
             args_collector: Callable[[], Iterable[Any]] = None,
             kwargs_collector: Callable[[], dict[str, Any]] = None,
@@ -68,6 +69,7 @@ class Operator(Generic[_O]):
             termination: Callable[[], Any] = None,
             handler: Handler = None,
             loop: bool = True,
+            warn: bool = False,
             loop_stopping: bool = None,
             delay: float | dt.timedelta = None,
             block: bool = False,
@@ -77,6 +79,7 @@ class Operator(Generic[_O]):
         """
         Defines the attributes of the handler.
 
+        :param name: The name of the operation.
         :param operation: The callback to call.
         :param kwargs_collector: The callback to collect args.
         :param kwargs_collector: The callback to collect kwargs.
@@ -84,6 +87,7 @@ class Operator(Generic[_O]):
         :param termination: The termination callback.
         :param handler: The handler object to handle the operation.
         :param loop: The value to run a loop.
+        :param warn: The value to warn.
         :param loop_stopping: The value to evaluate stopping during a loop.
         :param delay: The delay for the process.
         :param wait: The value to wait after starting to run the process.
@@ -102,6 +106,8 @@ class Operator(Generic[_O]):
             loop_stopping = False
         # end if
 
+        self.name = name
+        self.warn = warn
         self.delay = delay
         self.loop_stopping = loop_stopping
         self._loop = loop
@@ -414,7 +420,13 @@ class Operator(Generic[_O]):
         """Starts the screening process."""
 
         if self.operating:
-            warnings.warn(f"Operation process of {repr(self)} is already running.")
+            if self.warn:
+                warnings.warn(
+                    f"Operation process"
+                    f"{f' of operator {self.name}' if self.name else ''} "
+                    f"is already running."
+                )
+            # end if
 
             return
         # end if
@@ -447,7 +459,11 @@ class Operator(Generic[_O]):
             wait = self.wait_value
 
             if wait is None:
-                raise ValueError("Waiting value is not defined.")
+                raise ValueError(
+                    "Waiting value"
+                    f"{f' of operator {self.name}' if self.name else ''} "
+                    "is not defined."
+                )
             # end if
         # end if
 
@@ -467,12 +483,22 @@ class Operator(Generic[_O]):
             duration = self.timeout_value
 
             if duration is None:
-                raise ValueError("Timeout value is not defined.")
+                raise ValueError(
+                    "Timeout value"
+                    f"{f' of operator {self.name}' if self.name else ''} "
+                    "is not defined."
+                )
             # end if
         # end if
 
         if self.timeout:
-            warnings.warn(f"Timeout process of {repr(self)} is already running.")
+            if self.warn:
+                warnings.warn(
+                    f"Timeout process"
+                    f"{f' of operator {self.name}' if self.name else ''} "
+                    f"is already running."
+                )
+            # end if
 
             return
         # end if
@@ -494,7 +520,13 @@ class Operator(Generic[_O]):
         """
 
         if self.timeout:
-            warnings.warn(f"Stopping process of {repr(self)} is already running.")
+            if self.warn:
+                warnings.warn(
+                    f"Stopping process"
+                    f"{f' or operator {self.name}' if self.name else ''} "
+                    f"is already running."
+                )
+            # end if
 
             return
         # end if

@@ -24,7 +24,7 @@ def main() -> None:
         requirements="requirements.txt",
         dev_requirements="requirements-dev.txt",
         name='looperator',
-        version='1.8.1',
+        version='1.8.2',
         description=(
             "A python module to easily run loop based operations, "
             "control the starting, stopping of the loop, "
