@@ -1,19 +1,12 @@
 # setup.py
-
 import codecs
-
 with codecs.open('build.py', 'r') as build_file:
     build_source = build_file.read()
-
 source = dict()
-
 exec(build_source, source)
-
 setup = source['setup']
-
 def main() -> None:
     """Runs the function to distribute the package."""
-
     setup(
         package="looperator",
         exclude=[
@@ -47,8 +40,5 @@ def main() -> None:
             "Operating System :: OS Independent"
         ]
     )
-# end main
-
 if __name__ == "__main__":
     main()
-# end if
