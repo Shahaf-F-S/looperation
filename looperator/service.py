@@ -9,7 +9,7 @@ __all__ = [
     "ServiceInterface"
 ]
 
-Time = float | int | dt.timedelta, dt.datetime
+Time = float | dt.timedelta, dt.datetime
 
 class ServiceInterface:
     """A service interface for server client communication."""

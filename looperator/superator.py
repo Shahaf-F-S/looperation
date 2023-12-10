@@ -1,7 +1,7 @@
 # superator.py
 
 import datetime as dt
-from typing import Iterable
+from typing import Iterable, Callable, Any
 
 from looperator.operator import Operator
 from looperator.handler import Handler
@@ -10,7 +10,8 @@ __all__ = [
     "Superator"
 ]
 
-Time = float | dt.timedelta | dt.datetime
+TimeDuration = float | dt.timedelta
+TimeDestination = TimeDuration | dt.datetime
 
 class Superator(Operator):
     """A super operator to control multiple operators."""
@@ -19,16 +20,20 @@ class Superator(Operator):
             self,
             operators: Iterable[Operator],
             handler: Handler = None,
-            delay: float | dt.timedelta = None,
+            stopping_collector: Callable[[], bool] = None,
+            termination: Callable[[], Any] = None,
+            delay: TimeDuration = None,
             block: bool = False,
-            wait: Time = None,
-            timeout: Time = None
+            wait: TimeDestination = None,
+            timeout: TimeDestination = None
     ) -> None:
         """
         Defines the attributes of the operators controller.
 
         :param operators: The operators to control.
         :param handler: The handler object to handle the operation.
+        :param stopping_collector: The callback to collect a value to indicate to stop.
+        :param termination: The termination callback.
         :param delay: The delay for the process.
         :param wait: The value to wait after starting to run the process.
         :param block: The value to block the execution.
@@ -38,59 +43,42 @@ class Superator(Operator):
         self.operators = list(operators)
 
         super().__init__(
-            operation=lambda: (),
-            handler=handler, delay=delay,
-            block=block, wait=wait, timeout=timeout
+            handler=handler,
+            delay=delay,
+            block=block,
+            wait=wait,
+            timeout=timeout,
+            termination=termination,
+            stopping_collector=stopping_collector
         )
 
     def operate(self) -> None:
         """Runs the process of the price screening."""
 
         for operator in self.operators:
-            if all((operator.running, operator.operating, operator.blocking)):
-                operator.operate()
+            operator.operate()
 
     def start_operations(self) -> None:
         """Starts the screening process."""
 
         for operator in self.operators:
-            if not any((operator.running, operator.operating, operator.blocking)):
-                operator.start_operation()
-
-    def start_timeouts(self, duration: Time = None) -> None:
-        """
-        Runs a timeout for the process.
-
-        :param duration: The duration of the start_timeout.
-
-        :return: The start_timeout process.
-        """
-
-        if duration is None:
-            duration = self.timeout_value
-
-            if duration is None:
-                raise ValueError("Timeout value is not defined.")
-
-        for operator in self.operators:
-            if not any((operator.running, operator.operating, operator.blocking)):
-                operator.start_timeout(duration)
-
-        super().timeout_loop(duration)
+            operator.start_operation()
 
     def run(
             self,
-            loop: bool = True,
+            loop: bool = None,
+            loop_stopping: bool = None,
             block: bool = None,
-            wait: Time = None,
-            timeout: Time = None
+            wait: TimeDestination = None,
+            timeout: TimeDestination = None
     ) -> None:
         """
-        Runs the process of the price screening.
+        Runs the process of the operator object.
 
         :param loop: The value to run a loop.
         :param wait: The value to wait after starting to run the process.
         :param block: The value to block the execution.
+        :param loop_stopping: The value to evaluate stopping during a loop.
         :param timeout: The valur to add a start_timeout to the process.
         """
 
@@ -98,7 +86,10 @@ class Superator(Operator):
             if not any((operator.running, operator.operating)):
                 operator.run()
 
-        super().run(block=block, wait=wait, timeout=timeout, loop=loop)
+        super().run(
+            block=block, wait=wait, timeout=timeout,
+            loop=loop, loop_stopping=loop_stopping
+        )
 
     def stop_operation(self) -> None:
         """Stops the screening process."""
@@ -111,31 +102,43 @@ class Superator(Operator):
     def stop_timeout(self) -> None:
         """Stops the screening process."""
 
-        for operator in self.operators:
-            operator.stop_timeout()
-
         super().stop_timeout()
 
-    def pause(self) -> None:
-        """Pauses the screening process."""
+    def pause(self, operations: bool = True) -> None:
+        """
+        Pauses the screening process.
 
-        for operator in self.operators:
-            operator.pause()
+        :param operations: The value to pause all operations.
+        """
+
+        if operations:
+            for operator in self.operators:
+                operator.pause()
 
         super().pause()
 
-    def unpause(self) -> None:
-        """Unpauses the screening process."""
+    def unpause(self, operations: bool = True) -> None:
+        """
+        Unpauses the screening process.
 
-        for operator in self.operators:
-            operator.unpause()
+        :param operations: The value to unpause all operations.
+        """
+
+        if operations:
+            for operator in self.operators:
+                operator.unpause()
 
         super().unpause()
 
-    def stop(self) -> None:
-        """Stops the screening process."""
+    def stop(self, operations: bool = True) -> None:
+        """
+        Stops the screening process.
 
-        for operator in self.operators:
-            operator.stop()
+        :param operations: The value to stop all operations.
+        """
+
+        if operations:
+            for operator in self.operators:
+                operator.stop()
 
         super().stop()
