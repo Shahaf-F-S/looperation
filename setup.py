@@ -33,7 +33,7 @@ def main() -> None:
         license='MIT',
         author="Shahaf Frank-Shapir",
         author_email='shahaffrs@gmail.com',
-        url='https://github.com/Shahaf-F-S/looperator',
+        url='https://github.com/Shahaf-F-S/looperation',
         long_description_content_type="text/markdown",
         classifiers=[
             "Intended Audience :: Developers",

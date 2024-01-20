@@ -1,4 +1,4 @@
-# looperator
+# looperation
 
 > A python module to easily run loop based or condition-based operations, control the starting, pausing, unpausing, timeout, delay, and stopping of the loop, and handle exceptions in real time.
 
