@@ -1,54 +1,42 @@
 # handler.py
 
 import warnings
-from typing import Any, Callable, Iterable, Self
-
-from represent import represent
+from typing import Any, Callable, Iterable, Self, ClassVar
+from dataclasses import dataclass
 
 __all__ = [
     "Handler"
 ]
 
-@represent
+@dataclass
 class Handler:
     """A class to handle operations."""
 
-    def __init__(
-            self,
-            success_callback: Callable[[], Any] = None,
-            exception_callback: Callable[[], Any] = None,
-            cleanup_callback: Callable[[], Any] = None,
-            exception_handler: Callable[[Exception], Any] = None,
-            exceptions: Iterable[type[Exception]] = None,
-            warn: bool = True,
-            catch: bool = True,
-            silence: bool = False
-    ) -> None:
-        """
-        Handles the communication between the server and client.
+    success_callback: Callable[["Handler"], Any] = None
+    exception_callback: Callable[["Handler"], Any] = None
+    cleanup_callback: Callable[["Handler"], Any] = None
+    exception_handler: Callable[["Handler", Exception], Any] = None
+    exceptions: Iterable[type[Exception]] = None
+    warn: bool = True
+    catch: bool = True
+    silence: bool = False
+    exit: bool = False
+    caught: bool = False
+    data: ... = None
 
-        :param success_callback: The callback to run for success.
-        :param exception_handler: The exception handler.
-        :param exception_callback: The callback to run for exception.
-        :param cleanup_callback: The callback to run on finish.
-        :param exceptions: The exceptions to catch.
-        :param catch: The value to not raise an exception.
-        :param silence: The value to silence the output.
-        :param warn: The value to raise a warning instead of printing the message.
+    print_exception_handler: ClassVar[Callable[["Handler", Exception], Any]] = (
+        lambda h, e: print(
+            f"Exception raised and handled with data {h.data}:\n"
+            f"{type(e).__name__}:{e}"
+        )
+    )
 
-        :return: Any returned value.
-        """
-
-        self.success_callback = success_callback
-        self.exception_callback = exception_callback
-        self.cleanup_callback = cleanup_callback
-        self.exception_handler = exception_handler
-
-        self.exceptions = exceptions or ()
-
-        self.warn = warn
-        self.catch = catch
-        self.silence = silence
+    warn_exception_handler: ClassVar[Callable[["Handler", Exception], Any]] = (
+        lambda h, e: warnings.warn(
+            f"Exception raised and handled with data {h.data}:\n"
+            f"{type(e).__name__}:{e}"
+        )
+    )
 
     def __enter__(self) -> Self:
         """
@@ -57,8 +45,11 @@ class Handler:
         :return: The generator object.
         """
 
+        self.exit = False
+        self.caught = False
+
         if self.success_callback is not None:
-            self.success_callback()
+            self.success_callback(self)
 
         return self
 
@@ -73,26 +64,55 @@ class Handler:
 
         caught = False
 
-        if isinstance(exception, tuple(self.exceptions) or Exception):
-            caught = self.catch and True
+        if None not in (base, exception, traceback):
+            self.exit = True
+            self.caught = True
 
-            if self.exception_callback is not None:
-                self.exception_callback()
+            if isinstance(exception, tuple(self.exceptions or ()) or Exception):
+                caught = self.catch and True
 
-            if self.exception_handler is None:
-                if not self.silence:
-                    message = f"{base.__name__}: {str(exception)}"
+                if self.exception_callback is not None:
+                    self.exception_callback(self)
 
-                    if self.warn:
-                        warnings.warn(message)
+                if self.exception_handler is None:
+                    if not self.silence:
+                        message = f"{base.__name__}: {str(exception)}"
 
-                    else:
-                        print(message)
+                        if self.warn:
+                            warnings.warn(message)
 
-            else:
-                self.exception_handler(exception)
+                        else:
+                            print(message)
 
-        if self.cleanup_callback is not None:
-            self.cleanup_callback()
+                else:
+                    self.exception_handler(self, exception)
+
+            if self.cleanup_callback is not None:
+                self.cleanup_callback(self)
 
         return caught
+
+    def __call__(self, data: ... = None) -> Self:
+
+        if data is None:
+            data = self.data
+
+        return Handler(
+            success_callback=self.success_callback,
+            exception_callback=self.exception_callback,
+            cleanup_callback=self.cleanup_callback,
+            exception_handler=self.exception_handler,
+            exceptions=self.exceptions,
+            warn=self.warn,
+            catch=self.catch,
+            silence=self.silence,
+            data=data
+        )
+
+    def make_exit(self) -> None:
+
+        self.exit = True
+
+    def make_proceed(self) -> None:
+
+        self.exit = False

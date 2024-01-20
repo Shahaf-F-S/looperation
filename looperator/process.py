@@ -3,12 +3,19 @@
 import datetime as dt
 from typing import ClassVar, Any, Self
 
-from attrs import define
+from dataclasses import dataclass
 
-import pandas as pd
-import numpy as np
+try:
+    import pandas as pd
 
-from represent import represent
+except ImportError:
+    pd = None
+
+try:
+    import numpy as np
+
+except ImportError:
+    np = None
 
 __all__ = [
     "ProcessTime",
@@ -32,10 +39,10 @@ def to_datetime(index: Any, adjust: bool = True) -> dt.datetime:
         elif isinstance(index, (int, float)):
             index = dt.datetime.fromtimestamp(index)
 
-        elif isinstance(index, pd.Timestamp):
+        if (pd is not None) and isinstance(index, pd.Timestamp):
             index = index.to_pydatetime()
 
-        elif isinstance(index, np.datetime64):
+        if (np is not None) and isinstance(index, np.datetime64):
             index = index.astype(dt.datetime)
 
     except (TypeError, ValueError) as e:
@@ -47,8 +54,7 @@ def to_datetime(index: Any, adjust: bool = True) -> dt.datetime:
 
     return index
 
-@represent
-@define(repr=False, frozen=True)
+@dataclass(slots=True, frozen=True)
 class ProcessTime:
     """A class to contain the info of a call to the results."""
 

@@ -86,7 +86,7 @@ from looperator import Handler, Operator
 handler = Handler(
     exceptions=[ZeroDivisionError],
     exception_handler=print,
-    exception_callback=lambda: print("error")
+    exception_callback=lambda h: print("error")
 )
 
 operator = Operator(
@@ -245,6 +245,7 @@ def __init__(
         loop_stopping: bool = None,
         delay: TimeDuration = None,
         block: bool = False,
+        coroutine: bool = False,
         wait: float | TimeDestination = None,
         timeout: float | TimeDestination = None
 )

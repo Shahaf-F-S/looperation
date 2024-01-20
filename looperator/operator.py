@@ -3,12 +3,11 @@
 import time
 import warnings
 import threading
+import asyncio
 import datetime as dt
 from typing import (
-    Callable, Generic, Any, Iterable, TypeVar
+    Callable, Generic, Any, Iterable, TypeVar, Awaitable
 )
-
-from represent import represent, Modifiers
 
 from looperator.process import ProcessTime
 from looperator.handler import Handler
@@ -40,22 +39,8 @@ _O = TypeVar("_O")
 TimeDuration = float | dt.timedelta
 TimeDestination = TimeDuration | dt.datetime
 
-@represent
 class Operator(Generic[_O]):
     """A class to handle a loop operation."""
-
-    __modifiers__ = Modifiers(
-        excluded=[
-            "operation", "args_collector", "kwargs_collector",
-            "stopping_collector", "termination", "timeout_value"
-        ],
-        properties=[
-            "blocking", "timeout", "wait", "loop",
-            "operation", "running", "paused", "time",
-            "stopping", "start", "end"
-        ]
-
-    )
 
     DELAY = 0
     _SLEEP = 0.0001
@@ -63,7 +48,7 @@ class Operator(Generic[_O]):
     def __init__(
             self,
             name: str = None, *,
-            operation: Callable[..., _O] = None,
+            operation: Callable[..., _O | Awaitable[_O]] = None,
             args_collector: Callable[[], Iterable[Any]] = None,
             kwargs_collector: Callable[[], dict[str, Any]] = None,
             stopping_collector: Callable[[], bool] = None,
@@ -74,6 +59,7 @@ class Operator(Generic[_O]):
             loop_stopping: bool = None,
             delay: TimeDuration = None,
             block: bool = False,
+            coroutine: bool = False,
             wait: TimeDestination = None,
             timeout: TimeDestination = None
     ) -> None:
@@ -94,6 +80,7 @@ class Operator(Generic[_O]):
         :param wait: The value to wait after starting to run the process.
         :param block: The value to block the execution.
         :param timeout: The valur to add a start_timeout to the process.
+        :param coroutine: The value to add the process as a coroutine to a running event loop.
         """
 
         if delay is None:
@@ -107,6 +94,7 @@ class Operator(Generic[_O]):
 
         self.name = name
         self.warn = warn
+        self.coroutine = coroutine
         self.delay = delay
         self.loop_stopping = loop_stopping
         self._loop = loop
@@ -147,6 +135,7 @@ class Operator(Generic[_O]):
 
         data["_operation_process"] = None
         data["_timeout_process"] = None
+        data["_stopping_process"] = None
 
         return data
 
@@ -259,13 +248,33 @@ class Operator(Generic[_O]):
             end=self.end or dt.datetime.now()
         )
 
+    @property
+    def is_async(self) -> bool:
+
+        return self.operation and asyncio.iscoroutinefunction(self.operation)
+
+    async def async_operate(self) -> None:
+        """Calls the operation of the process."""
+
+        args = (self.args_collector() if self.args_collector else ())
+        kwargs = (self.kwargs_collector() if self.kwargs_collector else {})
+
+        if self.is_async:
+            await self.operation(*args, **kwargs)
+
+        else:
+            self.operation(*args, **kwargs)
+
     def operate(self) -> None:
         """Calls the operation of the process."""
 
-        self.operation(
-            *(self.args_collector() if self.args_collector else ()),
-            **(self.kwargs_collector() if self.kwargs_collector else {})
-        )
+        task = self.async_operate()
+
+        if self.coroutine:
+            asyncio.new_event_loop().create_task(task)
+
+        else:
+            asyncio.run(task)
 
     def continue_loop(self) -> bool:
         """Returns the value to continue the loop."""
@@ -299,11 +308,11 @@ class Operator(Generic[_O]):
             while self.paused:
                 time.sleep(self._SLEEP)
 
-    def operation_loop(self) -> None:
+    async def async_operation_loop(self) -> None:
         """Runs the process of the operator."""
 
         if not self.loop:
-            self.operate()
+            await self.async_operate()
 
         while self.running and self.continue_loop():
             while self.operating and self.continue_loop():
@@ -313,19 +322,36 @@ class Operator(Generic[_O]):
                 t = time.time()
 
                 if self.handler is None:
-                    self.operate()
+                    await self.async_operate()
 
                 else:
                     with self.handler:
-                        self.operate()
+                        await self.async_operate()
+
+                    if self.handler.caught and self.handler.exit:
+                        self.stop()
+
+                        break
 
                 if self.delay:
                     delay = time_seconds(self.delay)
 
-                    time.sleep(max(delay - (time.time() - t), 0))
+                    await asyncio.sleep(max(delay - (time.time() - t), 0))
 
             while self.paused:
-                time.sleep(self._SLEEP)
+                await asyncio.sleep(self._SLEEP)
+
+        self.stop()
+
+    def operation_loop(self) -> None:
+
+        task = self.async_operation_loop()
+
+        if self.coroutine:
+            asyncio.new_event_loop().create_task(task)
+
+        else:
+            asyncio.run(task)
 
     def timeout_loop(self, duration: TimeDestination) -> None:
         """
