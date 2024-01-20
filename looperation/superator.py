@@ -3,8 +3,8 @@
 import datetime as dt
 from typing import Iterable, Callable, Any
 
-from looperator.operator import Operator
-from looperator.handler import Handler
+from looperation.operator import Operator
+from looperation.handler import Handler
 
 __all__ = [
     "Superator"

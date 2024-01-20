@@ -4,7 +4,7 @@ from typing import Generic, Any, TypeVar
 
 from dataclasses import dataclass, field
 
-from looperator.process import ProcessTime
+from looperation.process import ProcessTime
 
 __all__ = [
     "Inputs",

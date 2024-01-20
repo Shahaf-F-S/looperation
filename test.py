@@ -4,7 +4,7 @@ import time
 import random
 import datetime as dt
 
-from looperator import Operator
+from looperation import Operator
 
 def main() -> None:
     """A function to run the main test."""

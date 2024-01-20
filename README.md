@@ -6,7 +6,7 @@
 Installation
 -----------
 ````
-pip install looperator
+pip install looperation
 ````
 
 example
@@ -15,12 +15,13 @@ example
 * when pausing the operator or superator, the timeout and stopping processes are paused as well.
 
 create an operator object
+
 ````python
 import time
 import random
 import datetime as dt
 
-from looperator import Operator
+from looperation import Operator
 
 operator = Operator(
     operation=lambda value: print(value),
@@ -80,8 +81,9 @@ process ending
 ````
 
 for exception handling pass to the operator object a handler object
+
 ````python
-from looperator import Handler, Operator
+from looperation import Handler, Operator
 
 handler = Handler(
     exceptions=[ZeroDivisionError],
@@ -106,12 +108,13 @@ division by zero
 ````
 
 run an operation as long as a condition is met
+
 ````python
 import time
 import random
 import datetime as dt
 
-from looperator import Operator
+from looperation import Operator
 
 conditions = [False, False, False]
 
@@ -127,7 +130,7 @@ operator = Operator(
 # loop_stopping=False to evaluate in a different thread.
 
 print("starting process")
-      
+
 operator.run()
 
 time.sleep(5)
@@ -149,19 +152,22 @@ process ending
 ````
 
 run a loop operation as long as a condition is met
+
 ````python
 import time
 import random
 import datetime as dt
 
-from looperator import Operator
+from looperation import Operator
+
 
 def loop_operation(operation: Operator):
     while operation.operating:
         print(random.randint(0, 11))
 
         operation.start_waiting(operation.delay)
-        
+
+
 conditions = [False, False, False]
 
 operator = Operator(
@@ -173,7 +179,7 @@ operator = Operator(
 operator.operation = lambda: loop_operation(operator)
 
 print("starting process")
-      
+
 operator.run()
 
 time.sleep(5)
@@ -195,11 +201,12 @@ process ending
 ````
 
 run the operation in the main thread
+
 ````python
 import random
 import datetime as dt
 
-from looperator import Operator
+from looperation import Operator
 
 operator = Operator(
     operation=lambda value: print(value),
@@ -209,7 +216,7 @@ operator = Operator(
 )
 
 print("starting process")
-      
+
 operator.run(block=True)
 
 print("process ending")
@@ -280,12 +287,13 @@ operator.stop()
 ```
 
 Using a Superator object - an Operator of Operators
+
 ````python
 import time
 import datetime as dt
 import random
 
-from looperator import Operator, Superator
+from looperation import Operator, Superator
 
 operator1 = Operator(
     operation=lambda value: print(value, "operator 1"),

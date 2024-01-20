@@ -33,4 +33,4 @@ def main(project: str, silence: bool = True) -> None:
             command()
 
 if __name__ == "__main__":
-    main(project="looperator")
+    main(project="looperation")

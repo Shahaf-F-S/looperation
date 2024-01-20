@@ -9,8 +9,8 @@ from typing import (
     Callable, Generic, Any, Iterable, TypeVar, Awaitable
 )
 
-from looperator.process import ProcessTime
-from looperator.handler import Handler
+from looperation.process import ProcessTime
+from looperation.handler import Handler
 
 __all__ = [
     "Operator",
